@@ -1,5 +1,5 @@
 from rest_framework.viewsets import ModelViewSet
-from utils.helper import create_response, get_first_error_message_from_serializer_errors, paginate_data
+from utils.helper import create_response, get_first_error_message_from_serializer_errors, paginate_data, get_params
 from utils.response_messages import *
 from django.db.models import Q
 
@@ -10,7 +10,6 @@ class BaseAPIView(ModelViewSet):
     prefetch_related_args = []
     OR_filters = {}
     AND_filters = {}
-    order_by = "-id"
 
     def create_record(self, request):
         try:
@@ -23,7 +22,6 @@ class BaseAPIView(ModelViewSet):
                                    400)
         except Exception as e:
             return create_response({'error':str(e)}, UNSUCCESSFUL, 500)
-
 
     def get_records(self, request):
         try:
@@ -51,7 +49,6 @@ class BaseAPIView(ModelViewSet):
         except Exception as e:
             return create_response({'error': str(e)}, UNSUCCESSFUL, 500)
 
-
     def update_record(self, request):
         try:
             if "id" in request.data:
@@ -68,4 +65,21 @@ class BaseAPIView(ModelViewSet):
                 return create_response({}, ID_NOT_PROVIDED, 404)
         except Exception as e:
             return create_response({'error':str(e)}, UNSUCCESSFUL, 500)
+
+    def delete_record(self, request):
+        try:
+            kwargs = {}
+            if "id" in request.query_params:
+                kwargs = get_params("id", request.query_params.get("id"), kwargs)
+                #multiple records deletion
+                instances = self.serializer_class.Meta.model.objects.filter(**kwargs)
+                if instances:
+                    instances.delete()
+                    return create_response({}, SUCCESSFUL, 200)
+                else:
+                    return create_response({}, NOT_FOUND, 404)
+            else:
+                return create_response({}, ID_NOT_PROVIDED, 404)
+        except Exception as e:
+            return create_response({'error': str(e)}, UNSUCCESSFUL, 500)
 
