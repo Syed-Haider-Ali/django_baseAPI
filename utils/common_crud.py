@@ -8,8 +8,8 @@ class BaseAPIView(ModelViewSet):
     serializer_class = None
     select_related_args = []
     prefetch_related_args = []
-    OR_filters = {}
-    AND_filters = {}
+    or_filters = {}
+    and_filters = {}
 
     def create_record(self, request):
         try:
@@ -37,7 +37,7 @@ class BaseAPIView(ModelViewSet):
                     else:
                         self.order_by = order_by_
 
-            data = self.serializer_class.Meta.model.objects.select_related(*self.select_related_args).prefetch_related(*self.prefetch_related_args).filter(Q(**self.OR_filters, _connector=Q.OR)).filter(**self.AND_filters).order_by(self.order_by)
+            data = self.serializer_class.Meta.model.objects.select_related(*self.select_related_args).prefetch_related(*self.prefetch_related_args).filter(Q(**self.or_filters, _connector=Q.OR)).filter(**self.and_filters).order_by(self.order_by)
 
             data, count = paginate_data(data, request)
             serialized_data = self.serializer_class(data, many=True).data
@@ -66,7 +66,7 @@ class BaseAPIView(ModelViewSet):
         except Exception as e:
             return create_response({'error':str(e)}, UNSUCCESSFUL, 500)
 
-    def delete_record(self, request):
+    def delete_records(self, request):
         try:
             kwargs = {}
             if "id" in request.query_params:

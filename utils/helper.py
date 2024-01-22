@@ -2,6 +2,7 @@ import ast
 from rest_framework.response import Response
 from rest_framework.utils.serializer_helpers import ReturnList
 from .pagination import Pagination
+from django.db import models
 
 
 def create_response(data, message, status_code):
@@ -55,3 +56,11 @@ def check_for_one_or_many(instances):
     except Exception as e:
         print(e)
         return instances
+
+
+class TimeStamps(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract=True
