@@ -1,3 +1,10 @@
-from django.shortcuts import render
+from .serializers import MakeSerializer, VechileSerializer
+from utils.common_crud import BaseAPIView
 
-# Create your views here.
+class MakeAPIView(BaseAPIView):
+    serializer_class = MakeSerializer
+
+
+class VechileAPIView(BaseAPIView):
+    serializer_class = VechileSerializer
+    prefetch_related_args = ['make']

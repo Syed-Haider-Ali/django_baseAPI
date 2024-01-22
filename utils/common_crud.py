@@ -30,14 +30,14 @@ class BaseAPIView(ModelViewSet):
             if order and order_by:
                 order_by_ = order_by.lower()
                 if hasattr(self.serializer_class.Meta.model, order_by_) and order_by != "id":
-                    self.order_by = order_by_
+                    order_by = order_by_
                 if order:
                     if order == 'desc':
-                        self.order_by = f"-{order_by_}"
+                        order_by = f"-{order_by_}"
                     else:
-                        self.order_by = order_by_
+                        order_by = order_by_
 
-            data = self.serializer_class.Meta.model.objects.select_related(*self.select_related_args).prefetch_related(*self.prefetch_related_args).filter(Q(**self.or_filters, _connector=Q.OR)).filter(**self.and_filters).order_by(self.order_by)
+            data = self.serializer_class.Meta.model.objects.select_related(*self.select_related_args).prefetch_related(*self.prefetch_related_args).filter(Q(**self.or_filters, _connector=Q.OR)).filter(**self.and_filters).order_by(order_by)
 
             data, count = paginate_data(data, request)
             serialized_data = self.serializer_class(data, many=True).data
