@@ -14,7 +14,7 @@ class BaseAPIView(ModelViewSet):
 
     def create_record(self, request):
         try:
-            serialized_data = self.serializer_class(data=request.data)
+            serialized_data = self.serializer_class(data=request.data, context={'request':request})
             if serialized_data.is_valid():
                 response_data = serialized_data.save()
                 return create_response(self.serializer_class(response_data).data, SUCCESSFUL, 200)
@@ -22,7 +22,8 @@ class BaseAPIView(ModelViewSet):
                                    get_first_error_message_from_serializer_errors(serialized_data.errors, UNSUCCESSFUL),
                                    400)
         except Exception as e:
-            return create_response({str(e)}, UNSUCCESSFUL, 500)
+            return create_response({'error':str(e)}, UNSUCCESSFUL, 500)
+
 
     def get_records(self, request):
         try:
@@ -49,3 +50,22 @@ class BaseAPIView(ModelViewSet):
             return create_response(response_data, SUCCESSFUL, 200)
         except Exception as e:
             return create_response({'error': str(e)}, UNSUCCESSFUL, 500)
+
+
+    def update_record(self, request):
+        try:
+            if "id" in request.data:
+                instance = self.serializer_class.Meta.model.objects.filter(id=request.data.get("id")).first()
+                if instance:
+                    serialized_data = self.serializer_class(instance, data=request.data, partial=True, context={'request':request})
+                    if serialized_data.is_valid():
+                        response_data = serialized_data.save()
+                        return create_response(self.serializer_class(response_data).data, SUCCESSFUL, 200)
+                    return create_response({}, get_first_error_message_from_serializer_errors(serialized_data.errors, UNSUCCESSFUL),400)
+                else:
+                    return create_response({}, NOT_FOUND, 400)
+            else:
+                return create_response({}, ID_NOT_PROVIDED, 404)
+        except Exception as e:
+            return create_response({'error':str(e)}, UNSUCCESSFUL, 500)
+
