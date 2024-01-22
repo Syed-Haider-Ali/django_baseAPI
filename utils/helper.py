@@ -1,6 +1,6 @@
 from rest_framework.response import Response
 from rest_framework.utils.serializer_helpers import ReturnList
-
+from .pagination import Pagination
 
 
 def create_response(data, message, status_code):
@@ -32,3 +32,14 @@ def get_first_error_message_from_serializer_errors(serialized_errors, default_me
 
     except Exception as e:
         return default_message
+
+
+def paginate_data(data, request):
+    limit = request.query_params.get('limit', None)
+    offset = request.query_params.get('offset', None)
+    if limit and offset:
+        pagination = Pagination()
+        data, count = pagination.paginate_queryset(data, request)
+        return data, count
+    else:
+        return data, data.count()
