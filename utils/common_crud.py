@@ -6,6 +6,7 @@ from django.db.models import Q
 
 class BaseAPIView(ModelViewSet):
     serializer_class = None
+    filterset_class = None
     select_related_args = []
     prefetch_related_args = []
     or_filters = {}
@@ -37,7 +38,9 @@ class BaseAPIView(ModelViewSet):
                     else:
                         order_by = order_by_
 
-            data = self.serializer_class.Meta.model.objects.select_related(*self.select_related_args).prefetch_related(*self.prefetch_related_args).filter(Q(**self.or_filters, _connector=Q.OR)).filter(**self.and_filters).order_by(order_by)
+            instances = self.serializer_class.Meta.model.objects.select_related(*self.select_related_args).prefetch_related(*self.prefetch_related_args).order_by(order_by)
+            filtered_data = self.filterset_class(request.GET, queryset=instances)
+            data = filtered_data.qs
 
             data, count = paginate_data(data, request)
             serialized_data = self.serializer_class(data, many=True).data
